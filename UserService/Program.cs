@@ -1,5 +1,5 @@
 using Scalar.AspNetCore;
-
+using UserService.Models;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -15,31 +15,26 @@ if (app.Environment.IsDevelopment())
     app.MapScalarApiReference(); 
 }
 
-app.UseHttpsRedirection();
+// app.UseHttpsRedirection();
 
-var Users = new List<User>
+var users = new List<User>
 {
-    new ( 1,"Alice", "alice@example.com" ),
-    new ( 2,"Bob", "bob@example.com" )
+    new ( 1, "Alice", "alice@example.com" )
 };
 
-app.MapGet("/weatherforecast", () =>
+app.MapGet("/users", () => users);
+
+app.MapGet("/users/{id}", (int id) =>
 {
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast");
+    var user = users.FirstOrDefault(u => u.Id == id);
+    return user is not null ? Results.Ok(user) : Results.NotFound();
+});
+
+app.MapPost("/users", (User user) =>
+{
+    users.Add(user);
+    return Results.Created($"/users/{user.Id}", user);
+});
 
 app.Run();
 
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}

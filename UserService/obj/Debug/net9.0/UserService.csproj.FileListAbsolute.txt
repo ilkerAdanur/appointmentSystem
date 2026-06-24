@@ -8,9 +8,6 @@ C:\Projects\appointmentSystem\UserService\bin\Debug\net9.0\UserService.dll
 C:\Projects\appointmentSystem\UserService\bin\Debug\net9.0\UserService.pdb
 C:\Projects\appointmentSystem\UserService\bin\Debug\net9.0\Microsoft.AspNetCore.OpenApi.dll
 C:\Projects\appointmentSystem\UserService\bin\Debug\net9.0\Microsoft.OpenApi.dll
-C:\Projects\appointmentSystem\UserService\bin\Debug\net9.0\Swashbuckle.AspNetCore.Swagger.dll
-C:\Projects\appointmentSystem\UserService\bin\Debug\net9.0\Swashbuckle.AspNetCore.SwaggerGen.dll
-C:\Projects\appointmentSystem\UserService\bin\Debug\net9.0\Swashbuckle.AspNetCore.SwaggerUI.dll
 C:\Projects\appointmentSystem\UserService\obj\Debug\net9.0\UserService.csproj.AssemblyReference.cache
 C:\Projects\appointmentSystem\UserService\obj\Debug\net9.0\rpswa.dswa.cache.json
 C:\Projects\appointmentSystem\UserService\obj\Debug\net9.0\UserService.GeneratedMSBuildEditorConfig.editorconfig
@@ -34,3 +31,4 @@ C:\Projects\appointmentSystem\UserService\obj\Debug\net9.0\refint\UserService.dl
 C:\Projects\appointmentSystem\UserService\obj\Debug\net9.0\UserService.pdb
 C:\Projects\appointmentSystem\UserService\obj\Debug\net9.0\UserService.genruntimeconfig.cache
 C:\Projects\appointmentSystem\UserService\obj\Debug\net9.0\ref\UserService.dll
+C:\Projects\appointmentSystem\UserService\bin\Debug\net9.0\Scalar.AspNetCore.dll
