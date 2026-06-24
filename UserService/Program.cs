@@ -1,10 +1,16 @@
 using Scalar.AspNetCore;
 using UserService.Models;
+using Microsoft.EntityFrameworkCore;
+using UserService.Data;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
+builder.Services.AddDbContext<UserDbContext>(options =>
+options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
 
 var app = builder.Build();
 
@@ -17,22 +23,22 @@ if (app.Environment.IsDevelopment())
 
 // app.UseHttpsRedirection();
 
-var users = new List<User>
-{
-    new ( 1, "Alice", "alice@example.com" )
-};
-
-app.MapGet("/users", () => users);
-
-app.MapGet("/users/{id}", (int id) =>
-{
-    var user = users.FirstOrDefault(u => u.Id == id);
-    return user is not null ? Results.Ok(user) : Results.NotFound();
+app.MapGet("/users", async (UserDbContext db) => {
+    return await db.Users.ToListAsync(); 
 });
 
-app.MapPost("/users", (User user) =>
+app.MapGet("/users/{id}", async (int id, UserDbContext db) =>
 {
-    users.Add(user);
+    var user = await db.Users.FindAsync(id);
+    return  user is not null 
+    ? Results.Ok(user) 
+    : Results.NotFound();
+});
+
+app.MapPost("/users", async (User user, UserDbContext db) =>
+{
+    db.Users.Add(user);
+    await db.SaveChangesAsync();
     return Results.Created($"/users/{user.Id}", user);
 });
 
