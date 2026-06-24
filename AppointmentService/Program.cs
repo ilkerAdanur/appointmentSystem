@@ -1,11 +1,10 @@
 using AppointmentService.Models;
 using AppointmentService.Data;
 using Microsoft.EntityFrameworkCore;
+using System.Net.Http.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 builder.Services.AddHttpClient();
 
@@ -15,15 +14,37 @@ builder.Configuration.GetConnectionString("DefaultConnection")
 ));
 
 
-
 var app = builder.Build();
 
-app.MapGet("/appointment", async (AppointmentDbContext db) =>
+app.MapGet("/appointments/{id}/details", async(
+int id,
+AppointmentDbContext db,
+IHttpClientFactory httpClientFactory,
+IConfiguration configuration) =>
+{
+    var appointment = await db.Appointments.FindAsync(id);
+    if(appointment is null)
+        return Results.NotFound("Appointment not found");
+    var userServiceUrl = configuration["Services:UserService"];
+    var client = httpClientFactory.CreateClient();
+
+    var user = await client.GetFromJsonAsync<object>(
+        $"{userServiceUrl}/users/{appointment.UserId}");
+    return Results.Ok(new
+    {
+       appointment.Id,
+       appointment.AppointmentDate,
+       appointment.Description,
+       User = user 
+    });
+});
+
+app.MapGet("/appointments", async (AppointmentDbContext db) =>
 {
     return await db.Appointments.ToListAsync();
 });
 
-app.MapGet("/appointment/{id}", async (int id, AppointmentDbContext db) =>
+app.MapGet("/appointments/{id}", async (int id, AppointmentDbContext db) =>
 {
     var appointment = await db.Appointments.FindAsync(id);
     return appointment is null
@@ -31,7 +52,7 @@ app.MapGet("/appointment/{id}", async (int id, AppointmentDbContext db) =>
     : Results.Ok(appointment);
 });
 
-app.MapPost("/appointment", async (
+app.MapPost("/appointments", async (
     Appointment appointment,
     AppointmentDbContext db,
     IHttpClientFactory httpClientFactory,
@@ -45,7 +66,7 @@ app.MapPost("/appointment", async (
 
     db.Appointments.Add(appointment);
     await db.SaveChangesAsync();
-    return Results.Created($"/appointment/{appointment.Id}",appointment);
+    return Results.Created($"/appointments/{appointment.Id}",appointment);
 });
 
 // Configure the HTTP request pipeline.
