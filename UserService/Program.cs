@@ -1,7 +1,9 @@
 using Scalar.AspNetCore;
-using UserService.Models;
 using Microsoft.EntityFrameworkCore;
 using UserService.Data;
+using UserService.Dtos;
+using UserService.Models;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -35,11 +37,29 @@ app.MapGet("/users/{id}", async (int id, UserDbContext db) =>
     : Results.NotFound();
 });
 
-app.MapPost("/users", async (User user, UserDbContext db) =>
+app.MapPost("/users", async (CreateUserDto dto, UserDbContext db) =>
 {
+    var user = new User
+    {
+        Name = dto.Name,
+        Email = dto.Email
+    };
     db.Users.Add(user);
     await db.SaveChangesAsync();
-    return Results.Created($"/users/{user.Id}", user);
+
+    return Results.Created(
+        $"/users/{user.Id}",
+        new UserResponseDto
+        {
+        Id = user.Id,
+        Name = user.Name,
+        Email = user.Email
+        }
+    );
+
+    // db.Users.Add(user);
+    // await db.SaveChangesAsync();
+    // return Results.Created($"/users/{user.Id}", user);
 });
 
 app.Run();

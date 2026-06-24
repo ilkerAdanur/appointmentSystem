@@ -2,6 +2,7 @@ using AppointmentService.Models;
 using AppointmentService.Data;
 using Microsoft.EntityFrameworkCore;
 using System.Net.Http.Json;
+using AppointmentService.Dtos;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -53,20 +54,39 @@ app.MapGet("/appointments/{id}", async (int id, AppointmentDbContext db) =>
 });
 
 app.MapPost("/appointments", async (
-    Appointment appointment,
+    CreateAppointmentDto dto,
     AppointmentDbContext db,
     IHttpClientFactory httpClientFactory,
     IConfiguration configuration) =>
 {
-    var userServiceUrl = configuration["Services:UserService"];
-    var client = httpClientFactory.CreateClient();
-    var response = await client.GetAsync($"{userServiceUrl}/users/{appointment.UserId}");
-    if (!response.IsSuccessStatusCode)
-        return Results.BadRequest("User not Found");
-
+    var appointment = new Appointment
+    {
+        AppointmentDate = dto.AppointmentDate,
+        Description = dto.Description,
+        UserId = dto.UserId
+    };
     db.Appointments.Add(appointment);
     await db.SaveChangesAsync();
-    return Results.Created($"/appointments/{appointment.Id}",appointment);
+
+    return Results.Created(
+         $"/appointments/{appointment.Id}",
+         new AppointmentResponseDto
+         {
+             Id = appointment.Id,
+             AppointmentDate = appointment.AppointmentDate,
+             Description = appointment.Description,
+             UserId = appointment.UserId
+         }
+    );
+    // var userServiceUrl = configuration["Services:UserService"];
+    // var client = httpClientFactory.CreateClient();
+    // var response = await client.GetAsync($"{userServiceUrl}/users/{appointment.UserId}");
+    // if (!response.IsSuccessStatusCode)
+    //     return Results.BadRequest("User not Found");
+
+    // db.Appointments.Add(appointment);
+    // await db.SaveChangesAsync();
+    // return Results.Created($"/appointments/{appointment.Id}",appointment);
 });
 
 if (app.Environment.IsDevelopment())
