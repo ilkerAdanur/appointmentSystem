@@ -69,13 +69,11 @@ app.MapPost("/appointments", async (
     return Results.Created($"/appointments/{appointment.Id}",appointment);
 });
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
 }
 
-// app.UseHttpsRedirection();
 
 app.Run();
 
