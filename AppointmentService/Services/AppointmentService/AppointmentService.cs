@@ -1,5 +1,6 @@
 using AppointmentService.Data;
 using AppointmentService.Dtos;
+using AppointmentService.Exceptions;
 using AppointmentService.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -26,7 +27,7 @@ public class AppointmentService : IAppointmentService
             var response = await client.GetAsync($"{userServiceUrl}/users/{dto.UserId}");
 
             if(!response.IsSuccessStatusCode)
-                throw new Exception("User not found");
+                throw new BadRequestException("User not found");
 
             var appointment = new Appointment
             {

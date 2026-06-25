@@ -7,11 +7,15 @@ using System.Net.Http.Json;
 using FluentValidation;
 using AppointmentService.Validators;
 using AppointmentService.Filters;
+using AppointmentService.ExceptionHandlers;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddOpenApi();
 builder.Services.AddHttpClient();
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+
+builder.Services.AddProblemDetails();
 
 builder.Services.AddDbContext<AppointmentDbContext>(options =>
 options.UseSqlServer(
@@ -23,6 +27,8 @@ builder.Services.AddValidatorsFromAssemblyContaining<CreateAppointmentDtoValidat
 builder.Services.AddScoped<IAppointmentService, AppointmentService.Services.AppointmentService>();
 
 var app = builder.Build();
+
+app.UseExceptionHandler();
 
 app.MapGet("/appointments/{id}/details", async (
 int id,
