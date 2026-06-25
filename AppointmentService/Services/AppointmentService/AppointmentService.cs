@@ -58,6 +58,7 @@ public class AppointmentService : IAppointmentService
             UserId = x.UserId
         }).ToListAsync();
     }
+    
     public async Task<AppointmentDetailsDto?> GetAppointmentDetails(int id)
     {
         var appointment = await _db.Appointments

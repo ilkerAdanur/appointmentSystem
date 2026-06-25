@@ -4,6 +4,8 @@ using AppointmentService.Dtos;
 using AppointmentService.Services;
 using Microsoft.EntityFrameworkCore;
 using System.Net.Http.Json;
+using FluentValidation;
+using AppointmentService.Validators;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,7 +17,8 @@ options.UseSqlServer(
 builder.Configuration.GetConnectionString("DefaultConnection")
 ));
 
-// 🔥 Service register
+builder.Services.AddValidatorsFromAssemblyContaining<CreateAppointmentDtoValidator>();
+
 builder.Services.AddScoped<IAppointmentService, AppointmentService.Services.AppointmentService>();
 
 var app = builder.Build();
