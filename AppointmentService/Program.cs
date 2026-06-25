@@ -51,8 +51,16 @@ app.MapGet("/appointments/{id}", async (int id, IAppointmentService service) =>
 
 app.MapPost("/appointments", async (
     CreateAppointmentDto dto,
+    IValidator<CreateAppointmentDto> validator,
     IAppointmentService service) =>
 {
+    var validationResult = await validator.ValidateAsync(dto);
+
+    if(!validationResult.IsValid)
+    {
+        return Results.BadRequest(validationResult.Errors.Select(x => x.ErrorMessage));
+    }
+
     var result = await service.Create(dto);
 
     try
