@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Net.Http.Json;
 using FluentValidation;
 using AppointmentService.Validators;
+using AppointmentService.Filters;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -51,41 +52,20 @@ app.MapGet("/appointments/{id}", async (int id, IAppointmentService service) =>
 
 app.MapPost("/appointments", async (
     CreateAppointmentDto dto,
-    IValidator<CreateAppointmentDto> validator,
     IAppointmentService service) =>
 {
-    var validationResult = await validator.ValidateAsync(dto);
-
-    if(!validationResult.IsValid)
-    {
-        return Results.BadRequest(validationResult.Errors.Select(x => x.ErrorMessage));
-    }
-
-    var result = await service.Create(dto);
-
     try
     {
-    return Results.Created(
-         $"/appointments/{result.Id}",
-         result
-    );        
+        var result = await service.Create(dto);
+
+        return Results.Created($"/appointments/{result.Id}", result);
     }
     catch (Exception ex)
     {
-        
         return Results.BadRequest(ex.Message);
     }
-
-    // var userServiceUrl = configuration["Services:UserService"];
-    // var client = httpClientFactory.CreateClient();
-    // var response = await client.GetAsync($"{userServiceUrl}/users/{appointment.UserId}");
-    // if (!response.IsSuccessStatusCode)
-    //     return Results.BadRequest("User not Found");
-
-    // db.Appointments.Add(appointment);
-    // await db.SaveChangesAsync();
-    // return Results.Created($"/appointments/{appointment.Id}",appointment);
-});
+})
+.AddEndpointFilter<ValidationFilter<CreateAppointmentDto>>();
 
 if (app.Environment.IsDevelopment())
 {
