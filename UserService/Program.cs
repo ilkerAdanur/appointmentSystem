@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using UserService.Data;
 using UserService.Dtos;
 using UserService.Models;
+using UserService.Services;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -13,6 +14,7 @@ builder.Services.AddOpenApi();
 builder.Services.AddDbContext<UserDbContext>(options =>
 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+builder.Services.AddScoped<IUserService, UserService.Services.UserService>();
 
 var app = builder.Build();
 
