@@ -20,6 +20,7 @@ obj/
 
 # Logs
 *.log
+Logs/
 
 # ASP.NET Core
 appsettings.Development.json

@@ -7,8 +7,17 @@ using AppointmentService.Validators;
 using AppointmentService.Filters;
 using AppointmentService.ExceptionHandlers;
 using AppointmentService.Configuration;
+using Serilog;
+
 
 var builder = WebApplication.CreateBuilder(args);
+
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.Console()
+    .WriteTo.File("Logs/appointment-service-.log", rollingInterval: RollingInterval.Day)
+    .CreateLogger();
+
+builder.Host.UseSerilog();
 
 builder.Services.AddOpenApi();
 builder.Services.AddHttpClient();
