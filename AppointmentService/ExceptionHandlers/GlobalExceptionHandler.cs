@@ -26,6 +26,15 @@ public class GlobalExceptionHandler : IExceptionHandler
             _ => StatusCodes.Status500InternalServerError
         };
 
+        if (exception is BadRequestException or NotFoundException)
+        {
+            _logger.LogWarning("Handled client error: {Message}", exception.Message);
+        }
+        else
+        {
+            _logger.LogError(exception, "Unhandled server error occurred.");
+        }
+
         await httpContext.Response.WriteAsJsonAsync(new
         {
             Status = httpContext.Response.StatusCode,

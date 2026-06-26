@@ -1,5 +1,6 @@
 using UserService.Exceptions;
 using Microsoft.AspNetCore.Diagnostics;
+using Serilog.Core;
 
 namespace UserService.ExceptionHandlers;
 
@@ -17,7 +18,6 @@ public class GlobalExceptionHandler : IExceptionHandler
         Exception exception,
         CancellationToken cancellationToken)
     {
-        _logger.LogError(exception, "An exception occurred.");
 
         httpContext.Response.StatusCode = exception switch
         {
@@ -25,6 +25,15 @@ public class GlobalExceptionHandler : IExceptionHandler
             NotFoundException => StatusCodes.Status404NotFound,
             _ => StatusCodes.Status500InternalServerError
         };
+
+          if (exception is BadRequestException or NotFoundException)
+            {
+                _logger.LogWarning("Handled client error: {Message}", exception.Message);
+            }
+            else
+            {
+                _logger.LogError(exception, "Unhandled server error occurred.");
+            }
 
         await httpContext.Response.WriteAsJsonAsync(new
         {
