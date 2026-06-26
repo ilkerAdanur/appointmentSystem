@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using UserService.Data;
 using UserService.Dtos;
+using UserService.Exceptions;
 using UserService.Models;
 
 namespace UserService.Services;
@@ -47,14 +48,19 @@ public class UserService : IUserService
 
     public async Task<UserResponseDto?> GetById(int id)
     {
-        return await _db.Users
-        .Where(x => x.Id == id)
+        var user = await _db.Users
         .Select(x => new UserResponseDto
         {
             Id = x.Id,
             Email = x.Email,
-            Name = x.Name   
-        }).FirstOrDefaultAsync();
+            Name = x.Name
+        })
+        .FirstOrDefaultAsync(x => x.Id == id);
+
+    if (user is null)
+        throw new NotFoundException($"User with id '{id}' was not found.");
+
+    return user;
 
     }
 }

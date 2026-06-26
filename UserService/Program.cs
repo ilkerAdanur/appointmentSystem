@@ -4,7 +4,10 @@ using UserService.Data;
 using UserService.Dtos;
 using UserService.Models;
 using UserService.Services;
-
+using FluentValidation;
+using UserService.Filters;
+using UserService.Validators;
+using UserService.ExceptionHandlers;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,9 +17,16 @@ builder.Services.AddOpenApi();
 builder.Services.AddDbContext<UserDbContext>(options =>
 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+builder.Services.AddValidatorsFromAssemblyContaining<CreateUserDtoValidator>();
+
 builder.Services.AddScoped<IUserService, UserService.Services.UserService>();
 
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+builder.Services.AddProblemDetails();
+
 var app = builder.Build();
+
+app.UseExceptionHandler();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -27,42 +37,50 @@ if (app.Environment.IsDevelopment())
 
 // app.UseHttpsRedirection();
 
-app.MapGet("/users", async (UserDbContext db) => {
-    return await db.Users.ToListAsync(); 
+app.MapGet("/users", async (IUserService service) => {
+    return await service.GetAll(); 
 });
 
-app.MapGet("/users/{id}", async (int id, UserDbContext db) =>
+app.MapGet("/users/{id}", async (int id, IUserService service) =>
 {
-    var user = await db.Users.FindAsync(id);
-    return  user is not null 
-    ? Results.Ok(user) 
-    : Results.NotFound();
+    return await service.GetById(id);
 });
 
-app.MapPost("/users", async (CreateUserDto dto, UserDbContext db) =>
+// app.MapPost("/users", async (CreateUserDto dto, UserDbContext db) =>
+// {
+//     var user = new User
+//     {
+//         Name = dto.Name,
+//         Email = dto.Email
+//     };
+//     db.Users.Add(user);
+//     await db.SaveChangesAsync();
+
+//     return Results.Created(
+//         $"/users/{user.Id}",
+//         new UserResponseDto
+//         {
+//         Id = user.Id,
+//         Name = user.Name,
+//         Email = user.Email
+//         }
+//     );
+
+//     // db.Users.Add(user);
+//     // await db.SaveChangesAsync();
+//     // return Results.Created($"/users/{user.Id}", user);
+// });
+
+
+app.MapPost("/users", async (
+    CreateUserDto dto,
+    IUserService service) =>
 {
-    var user = new User
-    {
-        Name = dto.Name,
-        Email = dto.Email
-    };
-    db.Users.Add(user);
-    await db.SaveChangesAsync();
+    var result = await service.Create(dto);
 
-    return Results.Created(
-        $"/users/{user.Id}",
-        new UserResponseDto
-        {
-        Id = user.Id,
-        Name = user.Name,
-        Email = user.Email
-        }
-    );
-
-    // db.Users.Add(user);
-    // await db.SaveChangesAsync();
-    // return Results.Created($"/users/{user.Id}", user);
-});
+    return Results.Created($"/users/{result.Id}", result);
+})
+.AddEndpointFilter<ValidationFilter<CreateUserDto>>();
 
 app.Run();
 
