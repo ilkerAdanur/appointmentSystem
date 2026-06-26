@@ -1,27 +1,33 @@
+using AppointmentService.Configuration;
 using AppointmentService.Data;
 using AppointmentService.Dtos;
 using AppointmentService.Exceptions;
 using AppointmentService.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 namespace AppointmentService.Services;
 
+
 public class AppointmentService : IAppointmentService
 {
+    private readonly ServiceUrls _services;
     private readonly AppointmentDbContext _db;
     private readonly IHttpClientFactory _httpClientFactory;
-    private readonly IConfiguration _configuration;
 
-    public AppointmentService(AppointmentDbContext db, IHttpClientFactory httpClientFactory, IConfiguration configuration)
+    public AppointmentService(
+                AppointmentDbContext db,
+                IHttpClientFactory httpClientFactory, 
+                IOptions<ServiceUrls> serviceOptions)
     {
         _db = db;
         _httpClientFactory = httpClientFactory;
-        _configuration = configuration;
+        _services = serviceOptions.Value;
     }
 
     public async Task<AppointmentResponseDto> Create(CreateAppointmentDto dto)
         {
-            var userServiceUrl = _configuration["Services:UserService"];
+            var userServiceUrl = _services.UserService;
             var client = _httpClientFactory.CreateClient();
 
             var response = await client.GetAsync($"{userServiceUrl}/users/{dto.UserId}");
@@ -76,7 +82,7 @@ public class AppointmentService : IAppointmentService
         if (appointment is null)
                 return null;
 
-        var userServiceUrl = _configuration["Services:UserService"];
+        var userServiceUrl = _services.UserService;
         var client = _httpClientFactory.CreateClient();
 
         var user = await client.GetFromJsonAsync<object>(

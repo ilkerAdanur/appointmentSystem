@@ -1,13 +1,12 @@
-using AppointmentService.Models;
 using AppointmentService.Data;
 using AppointmentService.Dtos;
 using AppointmentService.Services;
 using Microsoft.EntityFrameworkCore;
-using System.Net.Http.Json;
 using FluentValidation;
 using AppointmentService.Validators;
 using AppointmentService.Filters;
 using AppointmentService.ExceptionHandlers;
+using AppointmentService.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,6 +20,9 @@ builder.Services.AddDbContext<AppointmentDbContext>(options =>
 options.UseSqlServer(
 builder.Configuration.GetConnectionString("DefaultConnection")
 ));
+
+builder.Services.Configure<ServiceUrls>(
+    builder.Configuration.GetSection("Services"));
 
 builder.Services.AddValidatorsFromAssemblyContaining<CreateAppointmentDtoValidator>();
 
@@ -60,16 +62,9 @@ app.MapPost("/appointments", async (
     CreateAppointmentDto dto,
     IAppointmentService service) =>
 {
-    try
-    {
-        var result = await service.Create(dto);
+    var result = await service.Create(dto);
 
-        return Results.Created($"/appointments/{result.Id}", result);
-    }
-    catch (Exception ex)
-    {
-        return Results.BadRequest(ex.Message);
-    }
+    return Results.Created($"/appointments/{result.Id}", result);
 })
 .AddEndpointFilter<ValidationFilter<CreateAppointmentDto>>();
 

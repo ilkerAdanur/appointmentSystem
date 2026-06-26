@@ -1,5 +1,4 @@
 using AppointmentService.Dtos;
-using AppointmentService.Models;
 
 namespace AppointmentService.Services;
 public interface IAppointmentService
