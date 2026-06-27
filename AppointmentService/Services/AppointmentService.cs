@@ -30,10 +30,17 @@ public class AppointmentService : IAppointmentService
             var userServiceUrl = _services.UserService;
             var client = _httpClientFactory.CreateClient("UserServiceClient");
 
-            var response = await client.GetAsync($"{userServiceUrl}/users/{dto.UserId}");
+            try
+            {
+                var response = await client.GetAsync($"{userServiceUrl}/users/{dto.UserId}");
 
-            if(!response.IsSuccessStatusCode)
-                throw new BadRequestException("User not found");
+                if(!response.IsSuccessStatusCode)
+                    throw new BadRequestException("User not found");
+            }
+            catch (HttpRequestException)
+            {
+                throw new ServiceUnavailableException("UserService is currently unavailable.");
+            }
 
             var appointment = new Appointment
             {
@@ -83,12 +90,18 @@ public class AppointmentService : IAppointmentService
                 return null;
 
         var userServiceUrl = _services.UserService;
-        var client = _httpClientFactory.CreateClient();
+        var client = _httpClientFactory.CreateClient("UserServiceClient");
 
+        try
+        {
         var user = await client.GetFromJsonAsync<object>(
             $"{userServiceUrl}/users/{appointment.UserId}");
-
-        appointment.User = user;
+            appointment.User = user;
+        }
+        catch (HttpRequestException)
+        {
+            throw new ServiceUnavailableException("UserService is currently unavailable.");
+        }
 
         return appointment;
         
