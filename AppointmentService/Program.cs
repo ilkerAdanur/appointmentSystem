@@ -8,6 +8,8 @@ using AppointmentService.Filters;
 using AppointmentService.ExceptionHandlers;
 using AppointmentService.Configuration;
 using Serilog;
+using Polly;
+using Polly.Extensions.Http;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -20,7 +22,16 @@ Log.Logger = new LoggerConfiguration()
 builder.Host.UseSerilog();
 
 builder.Services.AddOpenApi();
-builder.Services.AddHttpClient();
+
+var retryPolicy = HttpPolicyExtensions
+    .HandleTransientHttpError()
+    .WaitAndRetryAsync(3, retryAttempt =>
+        TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)));
+
+builder.Services.AddHttpClient("UserServiceClient")
+    .AddPolicyHandler(retryPolicy);
+
+
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 
 builder.Services.AddProblemDetails();

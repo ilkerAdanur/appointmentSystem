@@ -28,7 +28,7 @@ public class AppointmentService : IAppointmentService
     public async Task<AppointmentResponseDto> Create(CreateAppointmentDto dto)
         {
             var userServiceUrl = _services.UserService;
-            var client = _httpClientFactory.CreateClient();
+            var client = _httpClientFactory.CreateClient("UserServiceClient");
 
             var response = await client.GetAsync($"{userServiceUrl}/users/{dto.UserId}");
 
