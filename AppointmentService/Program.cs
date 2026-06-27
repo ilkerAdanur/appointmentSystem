@@ -21,6 +21,8 @@ Log.Logger = new LoggerConfiguration()
 
 builder.Host.UseSerilog();
 
+builder.Services.AddHealthChecks();
+
 builder.Services.AddOpenApi();
 
 var retryPolicy = HttpPolicyExtensions
@@ -51,6 +53,8 @@ builder.Services.AddScoped<IAppointmentService, AppointmentService.Services.Appo
 var app = builder.Build();
 
 app.UseExceptionHandler();
+
+app.MapHealthChecks("/health");
 
 app.MapGet("/appointments/{id}/details", async (
 int id,

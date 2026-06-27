@@ -17,6 +17,8 @@ Log.Logger = new LoggerConfiguration()
     .WriteTo.File("Logs/user-service-.log", rollingInterval: RollingInterval.Day)
     .CreateLogger();
 
+builder.Services.AddHealthChecks();
+
 builder.Host.UseSerilog();
 
 builder.Services.AddOpenApi();
@@ -33,6 +35,8 @@ builder.Services.AddProblemDetails();
 var app = builder.Build();
 
 app.UseExceptionHandler();
+
+app.MapHealthChecks("/health");
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
