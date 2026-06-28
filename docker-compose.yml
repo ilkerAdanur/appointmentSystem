@@ -1,0 +1,29 @@
+services:
+  user-service:
+    image: user-service
+    build:
+      context: .
+      dockerfile: UserService/Dockerfile
+    ports:
+      - "8081:8080"
+
+  appointment-service:
+    image: appointment-service
+    build:
+      context: .
+      dockerfile: AppointmentService/Dockerfile
+    ports:
+      - "8082:8080"
+    environment:
+      Services__UserService: "http://user-service:8080"
+
+  api-gateway:
+    image: api-gateway
+    build:
+      context: .
+      dockerfile: ApiGateway/Dockerfile
+    ports:
+      - "8080:8080"
+    depends_on:
+      - user-service
+      - appointment-service
