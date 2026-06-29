@@ -423,7 +423,7 @@ Host: localhost
 Port: 14330
 Database: master
 Username: sa
-Password: Software2026resdvxcvd!
+Password: Configured locally in the .env file
 ```
 
 After migrations are applied, the following databases should be visible:
