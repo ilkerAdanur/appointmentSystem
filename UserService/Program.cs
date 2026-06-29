@@ -8,6 +8,8 @@ using UserService.Filters;
 using UserService.Validators;
 using UserService.ExceptionHandlers;
 using Serilog;
+using Microsoft.AspNetCore.Identity;
+using UserService.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -27,6 +29,8 @@ options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnectio
 builder.Services.AddValidatorsFromAssemblyContaining<CreateUserDtoValidator>();
 
 builder.Services.AddScoped<IUserService, UserService.Services.UserService>();
+builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
+
 
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
@@ -61,6 +65,16 @@ app.MapGet("/users/{id}", async (int id, IUserService service) =>
     return await service.GetById(id);
 });
 
+app.MapPost("/auth/register", async (
+    RegisterUserDto registerUserDto,
+    IUserService userService)=>
+{
+    var registeredUser = await userService.RegisterAsync(registerUserDto);
+    return Results.Created(
+        $"/users/{registeredUser.Id}",
+        registeredUser);
+}).AddEndpointFilter<ValidationFilter<RegisterUserDto>>();
+
 // app.MapPost("/users", async (CreateUserDto dto, UserDbContext db) =>
 // {
 //     var user = new User
@@ -87,15 +101,15 @@ app.MapGet("/users/{id}", async (int id, IUserService service) =>
 // });
 
 
-app.MapPost("/users", async (
-    CreateUserDto dto,
-    IUserService service) =>
-{
-    var result = await service.Create(dto);
+// app.MapPost("/users", async (
+//     CreateUserDto dto,
+//     IUserService service) =>
+// {
+//     var result = await service.Create(dto);
 
-    return Results.Created($"/users/{result.Id}", result);
-})
-.AddEndpointFilter<ValidationFilter<CreateUserDto>>();
+//     return Results.Created($"/users/{result.Id}", result);
+// })
+// .AddEndpointFilter<ValidationFilter<CreateUserDto>>();
 
 app.Run();
 

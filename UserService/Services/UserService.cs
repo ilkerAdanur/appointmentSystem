@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using UserService.Data;
 using UserService.Dtos;
@@ -9,10 +10,14 @@ namespace UserService.Services;
 public class UserService : IUserService
 {
     readonly UserDbContext _db;
+    private readonly IPasswordHasher<User> _passwordHasher;
 
-    public UserService(UserDbContext db)
+    public UserService(
+        UserDbContext db,
+        IPasswordHasher<User> passwordHasher)
     {
         _db = db;
+        _passwordHasher = passwordHasher;
     }
 
     public async Task<UserResponseDto> Create(CreateUserDto dto)
@@ -62,5 +67,39 @@ public class UserService : IUserService
 
     return user;
 
+    }
+
+    public async Task<UserResponseDto> RegisterAsync(RegisterUserDto registerUserDto)
+    {
+        var normalizedEmail = registerUserDto.Email.Trim().ToLowerInvariant();
+
+        var emailExists = await _db.Users
+            .AnyAsync(user => user.Email == normalizedEmail);
+        
+        if(emailExists)
+        {
+            throw new BadRequestException("A user with this email already exists.");
+        }
+
+        var user = new User
+        {
+            Name = registerUserDto.Name.Trim(),
+            Email = normalizedEmail
+        };
+
+        user.PasswordHash = _passwordHasher.HashPassword(
+        user,
+        registerUserDto.Password);
+
+        _db.Users.Add(user);
+
+        await _db.SaveChangesAsync();
+
+        return new UserResponseDto
+        {
+            Id = user.Id,
+            Name = user.Name,
+            Email = user.Email
+        };
     }
 }
