@@ -10,6 +10,7 @@ using AppointmentService.Configuration;
 using Serilog;
 using Polly;
 using Polly.Extensions.Http;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -53,6 +54,12 @@ builder.Services.AddScoped<IAppointmentService, AppointmentService.Services.Appo
 var app = builder.Build();
 
 app.UseExceptionHandler();
+
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<AppointmentDbContext>();
+    db.Database.Migrate();
+}
 
 app.MapHealthChecks("/health");
 

@@ -2,7 +2,6 @@ using Scalar.AspNetCore;
 using Microsoft.EntityFrameworkCore;
 using UserService.Data;
 using UserService.Dtos;
-using UserService.Models;
 using UserService.Services;
 using FluentValidation;
 using UserService.Filters;
@@ -33,6 +32,12 @@ builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<UserDbContext>();
+    db.Database.Migrate();
+}
 
 app.UseExceptionHandler();
 
