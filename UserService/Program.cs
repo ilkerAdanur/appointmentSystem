@@ -75,6 +75,14 @@ app.MapPost("/auth/register", async (
         registeredUser);
 }).AddEndpointFilter<ValidationFilter<RegisterUserDto>>();
 
+app.MapPost("/auth/login", async(
+    LoginUserDto loggedInUser,
+    IUserService userService )=>
+{
+    var loginUser = await userService.LoginAsync(loggedInUser);
+    return Results.Ok(loggedInUser);
+}).AddEndpointFilter<ValidationFilter<LoginUserDto>>();
+
 // app.MapPost("/users", async (CreateUserDto dto, UserDbContext db) =>
 // {
 //     var user = new User

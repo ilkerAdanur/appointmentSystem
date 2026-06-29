@@ -69,6 +69,34 @@ public class UserService : IUserService
 
     }
 
+    public async Task<UserResponseDto> LoginAsync(LoginUserDto loginUserDto)
+    {
+        var normalizedEmail = loginUserDto.Email.Trim().ToLowerInvariant();
+        var user = await _db.Users
+        .FirstOrDefaultAsync(x => x.Email == normalizedEmail);
+
+        if (user is null)
+            throw new BadRequestException("Invalid email or password.");
+
+        var verificationResult = _passwordHasher.VerifyHashedPassword(
+            user,
+            user.PasswordHash,
+            loginUserDto.Password);
+
+        if (verificationResult == PasswordVerificationResult.Failed)
+        {
+            throw new BadRequestException("Invalid email or password.");
+        }
+
+
+        return new UserResponseDto
+        {
+            Id = user.Id,
+            Email = user.Email,
+            Name = user.Name
+        };
+    }
+
     public async Task<UserResponseDto> RegisterAsync(RegisterUserDto registerUserDto)
     {
         var normalizedEmail = registerUserDto.Email.Trim().ToLowerInvariant();
