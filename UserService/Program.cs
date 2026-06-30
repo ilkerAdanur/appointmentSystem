@@ -13,6 +13,7 @@ using Microsoft.IdentityModel.Tokens;
 using UserService.Models;
 using UserService.Configuration;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,6 +23,30 @@ Log.Logger = new LoggerConfiguration()
     .CreateLogger();
 
 builder.Services.AddHealthChecks();
+
+var jwtSettings = builder.Configuration
+    .GetSection("Jwt")
+    .Get<JwtSettings>();
+
+builder.Services
+    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+
+            ValidIssuer = jwtSettings!.Issuer,
+            ValidAudience = jwtSettings.Audience,
+            IssuerSigningKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(jwtSettings.Key))
+        };
+    });
+
+builder.Services.AddAuthorization();
 
 builder.Host.UseSerilog();
 
@@ -51,6 +76,9 @@ using (var scope = app.Services.CreateScope())
 
 app.UseExceptionHandler();
 
+app.UseAuthentication();
+app.UseAuthorization();
+
 app.MapHealthChecks("/health");
 
 // Configure the HTTP request pipeline.
@@ -64,7 +92,8 @@ if (app.Environment.IsDevelopment())
 
 app.MapGet("/users", async (IUserService service) => {
     return await service.GetAll(); 
-});
+})
+.RequireAuthorization();
 
 app.MapGet("/users/{id}", async (int id, IUserService service) =>
 {
