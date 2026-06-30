@@ -39,6 +39,7 @@ services:
     environment:
       ConnectionStrings__DefaultConnection: "Server=sql-server,1433;Database=AppointmentDb;User Id=sa;Password=${SQL_SA_PASSWORD};TrustServerCertificate=True"
       Services__UserService: "http://user-service:8080"
+      Jwt__Key: "${JWT_KEY}"
     ports:
       - "8082:8080"
     depends_on:

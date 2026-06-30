@@ -10,7 +10,9 @@ using AppointmentService.Configuration;
 using Serilog;
 using Polly;
 using Polly.Extensions.Http;
-using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -24,6 +26,10 @@ builder.Host.UseSerilog();
 
 builder.Services.AddHealthChecks();
 
+var jwtSettings = builder.Configuration
+    .GetSection("Jwt")
+    .Get<JwtSettings>();
+    
 builder.Services.AddOpenApi();
 
 var retryPolicy = HttpPolicyExtensions
@@ -33,6 +39,26 @@ var retryPolicy = HttpPolicyExtensions
 
 builder.Services.AddHttpClient("UserServiceClient")
     .AddPolicyHandler(retryPolicy);
+
+builder.Services
+    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+
+            ValidIssuer = jwtSettings!.Issuer,
+            ValidAudience = jwtSettings.Audience,
+            IssuerSigningKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(jwtSettings.Key))
+        };
+    });
+
+builder.Services.AddAuthorization();
 
 
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
@@ -54,6 +80,9 @@ builder.Services.AddScoped<IAppointmentService, AppointmentService.Services.Appo
 var app = builder.Build();
 
 app.UseExceptionHandler();
+
+app.UseAuthentication();
+app.UseAuthorization();
 
 using (var scope = app.Services.CreateScope())
 {
@@ -78,7 +107,8 @@ IAppointmentService service) =>
 app.MapGet("/appointments", async (IAppointmentService service) =>
 {
     return await service.GetAll();
-});
+})
+.RequireAuthorization();
 
 app.MapGet("/appointments/{id}", async (int id, IAppointmentService service) =>
 {
