@@ -9,7 +9,10 @@ using UserService.Validators;
 using UserService.ExceptionHandlers;
 using Serilog;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.IdentityModel.Tokens;
 using UserService.Models;
+using UserService.Configuration;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -26,11 +29,14 @@ builder.Services.AddOpenApi();
 builder.Services.AddDbContext<UserDbContext>(options =>
 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+builder.Services.Configure<JwtSettings>(
+    builder.Configuration.GetSection("Jwt"));
+
 builder.Services.AddValidatorsFromAssemblyContaining<CreateUserDtoValidator>();
 
 builder.Services.AddScoped<IUserService, UserService.Services.UserService>();
 builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
-
+builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
@@ -75,13 +81,15 @@ app.MapPost("/auth/register", async (
         registeredUser);
 }).AddEndpointFilter<ValidationFilter<RegisterUserDto>>();
 
-app.MapPost("/auth/login", async(
+app.MapPost("/auth/login", async (
     LoginUserDto loggedInUser,
-    IUserService userService )=>
+    IUserService userService) =>
 {
-    var loginUser = await userService.LoginAsync(loggedInUser);
-    return Results.Ok(loggedInUser);
-}).AddEndpointFilter<ValidationFilter<LoginUserDto>>();
+    var loginResult = await userService.LoginAsync(loggedInUser);
+
+    return Results.Ok(loginResult);
+})
+.AddEndpointFilter<ValidationFilter<LoginUserDto>>();
 
 // app.MapPost("/users", async (CreateUserDto dto, UserDbContext db) =>
 // {

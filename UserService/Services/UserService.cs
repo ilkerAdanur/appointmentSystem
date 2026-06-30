@@ -11,13 +11,15 @@ public class UserService : IUserService
 {
     readonly UserDbContext _db;
     private readonly IPasswordHasher<User> _passwordHasher;
-
+    private readonly IJwtTokenService _jwtTokenService;
     public UserService(
-        UserDbContext db,
-        IPasswordHasher<User> passwordHasher)
+    UserDbContext db,
+    IPasswordHasher<User> passwordHasher,
+    IJwtTokenService jwtTokenService)
     {
         _db = db;
         _passwordHasher = passwordHasher;
+        _jwtTokenService = jwtTokenService;
     }
 
     public async Task<UserResponseDto> Create(CreateUserDto dto)
@@ -69,7 +71,7 @@ public class UserService : IUserService
 
     }
 
-    public async Task<UserResponseDto> LoginAsync(LoginUserDto loginUserDto)
+    public async Task<LoginResponseDto> LoginAsync(LoginUserDto loginUserDto)
     {
         var normalizedEmail = loginUserDto.Email.Trim().ToLowerInvariant();
         var user = await _db.Users
@@ -88,12 +90,17 @@ public class UserService : IUserService
             throw new BadRequestException("Invalid email or password.");
         }
 
-
-        return new UserResponseDto
+        var userResponse = new UserResponseDto
         {
             Id = user.Id,
             Email = user.Email,
             Name = user.Name
+        };
+        return new LoginResponseDto
+        {
+            AccessToken = _jwtTokenService.GenerateToken(user),
+            ExpiresAt = _jwtTokenService.GetExpirationDate(),
+            User = userResponse
         };
     }
 
