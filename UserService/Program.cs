@@ -129,6 +129,15 @@ app.MapPost("/auth/login", async (
 })
 .AddEndpointFilter<ValidationFilter<LoginUserDto>>();
 
+app.MapPost("/auth/logout", async (
+    RevokeRefreshTokenDto dto,
+    IUserService userService) =>
+{
+    await userService.RevokeRefreshTokenAsync(dto);
+
+    return Results.NoContent();
+});
+
 // app.MapPost("/users", async (CreateUserDto dto, UserDbContext db) =>
 // {
 //     var user = new User

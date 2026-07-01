@@ -10,4 +10,5 @@ public interface IUserService
     Task<UserResponseDto> RegisterAsync(RegisterUserDto registerUserDto);
     Task<LoginResponseDto> LoginAsync(LoginUserDto loginUserDto);
     Task<LoginResponseDto> RefreshTokenAsync(RefreshTokenDto dto);
+    Task RevokeRefreshTokenAsync(RevokeRefreshTokenDto dto);
 }

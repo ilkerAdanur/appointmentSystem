@@ -174,4 +174,18 @@ public class UserService : IUserService
         }
     };
 }
+
+    public async Task RevokeRefreshTokenAsync(RevokeRefreshTokenDto dto)
+    {
+        var user = await _db.Users
+            .FirstOrDefaultAsync(x => x.RefreshToken == dto.RefreshToken);
+
+        if (user is null)
+            throw new BadRequestException("Invalid refresh token.");
+
+        user.RefreshToken = null;
+        user.RefreshTokenExpiresAt = null;
+
+        await _db.SaveChangesAsync();
+    }
 }
