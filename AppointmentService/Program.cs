@@ -102,7 +102,8 @@ IAppointmentService service) =>
         return Results.NotFound("Appointment not found");
 
     return Results.Ok(result);
-});
+})
+.RequireAuthorization();
 
 app.MapGet("/appointments", async (IAppointmentService service) =>
 {
@@ -117,7 +118,8 @@ app.MapGet("/appointments/{id}", async (int id, IAppointmentService service) =>
     return appointment is null
     ? Results.NotFound()
     : Results.Ok(appointment);
-});
+})
+.RequireAuthorization();
 
 app.MapPost("/appointments", async (
     CreateAppointmentDto dto,
@@ -127,7 +129,8 @@ app.MapPost("/appointments", async (
 
     return Results.Created($"/appointments/{result.Id}", result);
 })
-.AddEndpointFilter<ValidationFilter<CreateAppointmentDto>>();
+.AddEndpointFilter<ValidationFilter<CreateAppointmentDto>>()
+.RequireAuthorization();
 
 if (app.Environment.IsDevelopment())
 {
