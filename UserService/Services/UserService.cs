@@ -90,6 +90,13 @@ public class UserService : IUserService
             throw new BadRequestException("Invalid email or password.");
         }
 
+        var refreshToken = _jwtTokenService.GenerateRefreshToken();
+
+        user.RefreshToken = refreshToken;
+        user.RefreshTokenExpiresAt = _jwtTokenService.GetRefreshTokenExpirationDate();
+
+        await _db.SaveChangesAsync();
+
         var userResponse = new UserResponseDto
         {
             Id = user.Id,
@@ -99,6 +106,7 @@ public class UserService : IUserService
         return new LoginResponseDto
         {
             AccessToken = _jwtTokenService.GenerateToken(user),
+            RefreshToken = refreshToken,
             ExpiresAt = _jwtTokenService.GetExpirationDate(),
             User = userResponse
         };
@@ -137,4 +145,33 @@ public class UserService : IUserService
             Email = user.Email
         };
     }
+
+    public async Task<LoginResponseDto> RefreshTokenAsync(RefreshTokenDto dto)
+{
+    var user = await _db.Users
+        .FirstOrDefaultAsync(x => x.RefreshToken == dto.RefreshToken);
+
+    if (user is null || user.RefreshTokenExpiresAt < DateTime.UtcNow)
+        throw new BadRequestException("Invalid refresh token.");
+
+    var newRefreshToken = _jwtTokenService.GenerateRefreshToken();
+
+    user.RefreshToken = newRefreshToken;
+    user.RefreshTokenExpiresAt = _jwtTokenService.GetRefreshTokenExpirationDate();
+
+    await _db.SaveChangesAsync();
+
+    return new LoginResponseDto
+    {
+        AccessToken = _jwtTokenService.GenerateToken(user),
+        RefreshToken = newRefreshToken,
+        ExpiresAt = _jwtTokenService.GetExpirationDate(),
+        User = new UserResponseDto
+        {
+            Id = user.Id,
+            Name = user.Name,
+            Email = user.Email
+        }
+    };
+}
 }

@@ -100,6 +100,15 @@ app.MapGet("/users/{id}", async (int id, IUserService service) =>
     return await service.GetById(id);
 });
 
+app.MapPost("/auth/refresh", async (
+    RefreshTokenDto dto,
+    IUserService userService) =>
+{
+    var result = await userService.RefreshTokenAsync(dto);
+
+    return Results.Ok(result);
+});
+
 app.MapPost("/auth/register", async (
     RegisterUserDto registerUserDto,
     IUserService userService)=>

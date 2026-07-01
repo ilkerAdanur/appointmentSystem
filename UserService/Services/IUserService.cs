@@ -9,4 +9,5 @@ public interface IUserService
     Task<UserResponseDto?> GetById(int id);
     Task<UserResponseDto> RegisterAsync(RegisterUserDto registerUserDto);
     Task<LoginResponseDto> LoginAsync(LoginUserDto loginUserDto);
+    Task<LoginResponseDto> RefreshTokenAsync(RefreshTokenDto dto);
 }
