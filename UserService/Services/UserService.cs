@@ -127,7 +127,8 @@ public class UserService : IUserService
         var user = new User
         {
             Name = registerUserDto.Name.Trim(),
-            Email = normalizedEmail
+            Email = normalizedEmail,
+            Role = "User"
         };
 
         user.PasswordHash = _passwordHasher.HashPassword(

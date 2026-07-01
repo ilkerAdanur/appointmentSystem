@@ -93,7 +93,7 @@ if (app.Environment.IsDevelopment())
 app.MapGet("/users", async (IUserService service) => {
     return await service.GetAll(); 
 })
-.RequireAuthorization();
+.RequireAuthorization(policy => policy.RequireRole("Admin"));
 
 app.MapGet("/users/{id}", async (int id, IUserService service) =>
 {
